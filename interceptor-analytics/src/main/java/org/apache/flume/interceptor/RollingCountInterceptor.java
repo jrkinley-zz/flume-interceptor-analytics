@@ -4,35 +4,35 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.flume.Event;
+import org.apache.flume.source.PeriodicEmissionSource;
 import org.apache.flume.tools.RollingCounters;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.Lists;
 
 /**
- * A Flume Interceptor that counts objects within an event in a sliding window. For example,
- * counting how many times a hashtag has appeared in twitter status updates in the past 30 minutes.
+ * A Flume Interceptor that counts objects within an {@link Event} in a sliding window. See
+ * {@link RollingCounters}.
  * <p>
- * In this case, the hashtags are extracted from the tweet, their counts incremented, and their new
- * totals added to the event's header. See {@link RollingCounters}.
+ * For example: counting how many times a hashtag has appeared in twitter status updates in the past
+ * 30 minutes. In this case, the hashtags are extracted from the tweet, their counts incremented,
+ * and their new totals added to the event's header.
  * <p>
- * For example, if the sliding window length is set to 30 minutes and the following tweet was seen
- * 100 times in the past 60 minutes, but only 50 times in the past 30 minutes then the emitted event
- * would contain the following:
+ * If the sliding window length is set to 30 minutes and the following tweet was seen 50 times in
+ * the past 30 minutes then the emitted event would contain the following headers:
  * 
  * <pre>
  * {@code
- * Event header:
- * Hadoop, 50
- * BigData, 50
- * 
- * Event body:
- * "text":"Follow @ClouderaEng for technical posts, updates, and resources. Check it out: http://j.mp/122iEeW #Hadoop #BigData"
- * }
+ * Event header: {"#Hadoop":"50","#BigData":"50"}
+ * Event body: {"text":"Follow @ClouderaEng for technical posts, updates, and resources. #Hadoop #BigData"}
  * </pre>
+ * 
+ * For a more scalable approach, the counts should be collected by another source, which can emit
+ * them as seperate events that can be multiplexed and routed downstream. See
+ * {@link PeriodicEmissionSource}
  * @param <T>
  */
-public abstract class RollingCountInterceptor<T> implements Interceptor {
+public abstract class RollingCountInterceptor<T> implements AnalyticInterceptor {
   private static final Logger LOG = Logger.getLogger(RollingCountInterceptor.class);
   public static final String NUM_BUCKETS = "numBuckets";
   public static final String WINDOW_LEN_SEC = "windowLenSec";
@@ -45,12 +45,12 @@ public abstract class RollingCountInterceptor<T> implements Interceptor {
   }
 
   /** {@inheritDoc} */
-  public void close() {
+  public void initialize() {
     // no-op
   }
 
   /** {@inheritDoc} */
-  public void initialize() {
+  public void close() {
     // no-op
   }
 
@@ -59,14 +59,14 @@ public abstract class RollingCountInterceptor<T> implements Interceptor {
     List<T> objects = getObjectsToCount(event);
     if (LOG.isDebugEnabled()) {
       LOG.debug(String.format("Identified %d objects to count from event: %s", objects.size(),
-        new String(event.getBody())));
+        objects));
     }
 
     if (!objects.isEmpty()) {
       Map<String, String> headers = event.getHeaders();
       for (T obj : objects) {
         long total = counters.incrementCount(obj);
-        headers.put(obj.toString(), Long.toString(total));
+        headers.put(String.valueOf(obj), String.valueOf(total));
         if (LOG.isDebugEnabled()) {
           LOG.debug(String.format("Added counter to event header: %s=%d", obj.toString(), total));
         }
@@ -82,6 +82,14 @@ public abstract class RollingCountInterceptor<T> implements Interceptor {
       intercepted.add(intercept(e));
     }
     return intercepted;
+  }
+
+  /**
+   * Gets the current objects and their totals
+   * @return Map of objects to totals
+   */
+  public Map<T, Long> getCounters() {
+    return counters.getCounters();
   }
 
   /**

@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 
 import org.apache.flume.Context;
 import org.apache.flume.Event;
-import org.apache.flume.analytics.twitter.RollingHashtagCount;
+import org.apache.flume.analytics.twitter.HashtagRollingCountInterceptor;
 import org.apache.flume.event.EventBuilder;
 import org.apache.flume.interceptor.Interceptor;
 import org.apache.flume.interceptor.RollingCountInterceptor;
@@ -15,8 +15,8 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 
-public class TestRollingHashtagCount {
-  private static final Logger LOG = Logger.getLogger(TestRollingHashtagCount.class);
+public class TestHashtagRollingCount {
+  private static final Logger LOG = Logger.getLogger(TestHashtagRollingCount.class);
   private static final String TWEET =
       "{\"text\":\"Follow @ClouderaEng for technical posts, updates, and resources. "
           + "Check it out: http://j.mp/122iEeW #Hadoop #BigData\""
@@ -27,7 +27,7 @@ public class TestRollingHashtagCount {
       IllegalAccessException, InterruptedException {
 
     Event intercepted;
-    Interceptor.Builder builder = RollingHashtagCount.Builder.class.newInstance();
+    Interceptor.Builder builder = HashtagRollingCountInterceptor.Builder.class.newInstance();
 
     Context ctx = new Context();
     ctx.put(RollingCountInterceptor.NUM_BUCKETS, "5");

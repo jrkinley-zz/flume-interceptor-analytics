@@ -3,16 +3,23 @@ package org.apache.flume.analytics.twitter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.flume.Context;
 import org.apache.flume.Event;
+import org.apache.flume.event.EventBuilder;
 import org.apache.flume.interceptor.Interceptor;
 import org.apache.flume.interceptor.RollingCountInterceptor;
+import org.apache.flume.interceptor.TimestampInterceptor;
+import org.apache.flume.tools.InterceptorRegistry;
 import org.apache.flume.tools.RollingCounters;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * A Flume Interceptor that counts how many times a hashtag has appered in twitter status updates in
@@ -20,16 +27,26 @@ import org.codehaus.jackson.JsonToken;
  * <p>
  * See {@link RollingCountInterceptor} and {@link RollingCounters}.
  */
-public class RollingHashtagCount extends RollingCountInterceptor<String> {
-  private static final Logger LOG = Logger.getLogger(RollingHashtagCount.class);
+public class HashtagRollingCountInterceptor extends RollingCountInterceptor<String> {
+  private static final Logger LOG = Logger.getLogger(HashtagRollingCountInterceptor.class);
   private static final String STATUS_UPDATE_FIELDNAME = "text";
   private static final String WHITESPACE = " ";
   private static final String HASHTAG = "#";
 
   private final JsonFactory jsonFactory = new JsonFactory();
 
-  public RollingHashtagCount(int numBuckets, int windowLenSec) {
+  public HashtagRollingCountInterceptor(int numBuckets, int windowLenSec) {
     super(numBuckets, windowLenSec);
+  }
+
+  /** {@inheritDoc} */
+  public void initialize() {
+    InterceptorRegistry.register(HashtagRollingCountInterceptor.class, this);
+  }
+
+  /** {@inheritDoc} */
+  public void close() {
+    InterceptorRegistry.deregister(this);
   }
 
   /**
@@ -65,21 +82,38 @@ public class RollingHashtagCount extends RollingCountInterceptor<String> {
   /** {@inheritDoc} */
   @Override
   public List<String> getObjectsToCount(Event event) {
-    List<String> hashTags = new ArrayList<String>();
+    List<String> hashtags = new ArrayList<String>();
     String tweet = getTweetFromEvent(event);
     if (tweet != null) {
       String[] words = tweet.split(WHITESPACE);
       for (String w : words) {
         if (w.startsWith(HASHTAG)) {
-          hashTags.add(w);
+          hashtags.add(w);
         }
       }
     }
-    return hashTags;
+    return hashtags;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public List<Event> getStatsEvents() {
+    List<Event> events = Lists.newArrayList();
+    Map<String, Long> counters = getCounters();
+
+    for (String obj : counters.keySet()) {
+      Map<String, String> headers = Maps.newHashMap();
+      headers.put(obj, String.valueOf(counters.get(obj)));
+      headers.put(TimestampInterceptor.Constants.TIMESTAMP,
+        Long.toString(System.currentTimeMillis()));
+      events.add(EventBuilder.withBody(new byte[0], headers));
+    }
+
+    return events;
   }
 
   /**
-   * Builder which builds new instance of the RollingHashtagCount interceptor.
+   * Builder which builds new instance of HashtagRollingCountInterceptor.
    */
   public static class Builder implements Interceptor.Builder {
     private int numBuckets;
@@ -93,7 +127,7 @@ public class RollingHashtagCount extends RollingCountInterceptor<String> {
 
     @Override
     public Interceptor build() {
-      return new RollingHashtagCount(numBuckets, windowLenSec);
+      return new HashtagRollingCountInterceptor(numBuckets, windowLenSec);
     }
   }
 }

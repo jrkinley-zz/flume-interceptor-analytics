@@ -7,6 +7,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.Maps;
+
 /**
  * Counts objects in a sliding window.
  * <p>
@@ -46,8 +48,6 @@ public class RollingCounters<T> {
     this.tail = setTail();
     startReaper();
 
-    LOG.info(String.format("Initializing RollingCounters: windowLenSec=%d,"
-        + "numBuckets=%d, millisPerBucket=%d", windowLenSec, numBuckets, millisPerBucket));
     if (LOG.isDebugEnabled()) {
       LOG.debug(String.format("Head pos set to [%d], tail pos set to [%d]", head, tail));
     }
@@ -117,25 +117,41 @@ public class RollingCounters<T> {
    * @return The new total
    */
   public long incrementCount(T obj) {
-    long[] buckets = objCounts.get(obj);
-    if (buckets == null) {
-      buckets = new long[numBuckets];
-      objCounts.put(obj, buckets);
-    }
-    buckets[head]++;
-
     long total = 0;
-    for (long b : buckets) {
-      total += b;
+    synchronized (objCounts) {
+      long[] buckets = objCounts.get(obj);
+      if (buckets == null) {
+        buckets = new long[numBuckets];
+        objCounts.put(obj, buckets);
+      }
+      buckets[head]++;
+      for (long b : buckets) {
+        total += b;
+      }
     }
     return total;
+  }
+
+  /**
+   * Gets the current objects and their totals
+   * @return Map of objects to totals
+   */
+  public Map<T, Long> getCounters() {
+    Map<T, Long> totals = Maps.newHashMap();
+    for (T obj : objCounts.keySet()) {
+      totals.put(obj, getTotalCount(obj));
+    }
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(String.format("Returned %d counters", totals.size()));
+    }
+    return totals;
   }
 
   /**
    * @param obj The object to return the count for
    * @return The count for the given object. The count is the sum of all buckets
    */
-  public long getTotalCount(T obj) {
+  private long getTotalCount(T obj) {
     long[] buckets = objCounts.get(obj);
     long total = 0;
     for (long b : buckets) {

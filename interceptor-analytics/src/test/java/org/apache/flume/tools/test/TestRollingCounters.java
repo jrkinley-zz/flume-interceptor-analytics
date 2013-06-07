@@ -1,5 +1,7 @@
 package org.apache.flume.tools.test;
 
+import java.util.Map;
+
 import org.apache.flume.tools.RollingCounters;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -55,11 +57,14 @@ public class TestRollingCounters {
       Thread.sleep(wait);
     }
 
+    Map<String, Long> currentTotals;
+
     // Check counts at 5 second intervals for next 20 seconds. The counts should stay the same as
     // we're still within the window length of 30 seconds (6 buckets)
     for (int i = 0; i < 4; i++) {
-      t1 = counters.getTotalCount(WORD_ONE);
-      t2 = counters.getTotalCount(WORD_TWO);
+      currentTotals = counters.getCounters();
+      t1 = currentTotals.get(WORD_ONE);
+      t2 = currentTotals.get(WORD_TWO);
       LOG.info(String.format("Counters: %s:%d\t%s:%d", WORD_ONE, t1, WORD_TWO, t2));
       Assert.assertEquals(20, t1);
       Assert.assertEquals(10, t2);
@@ -69,8 +74,9 @@ public class TestRollingCounters {
     // Check counts at 5 second intervals for next 10 seconds. The counts should start to decrease
     // as the window advances
     for (int i = 2; i > 0; i--) {
-      t1 = counters.getTotalCount(WORD_ONE);
-      t2 = counters.getTotalCount(WORD_TWO);
+      currentTotals = counters.getCounters();
+      t1 = currentTotals.get(WORD_ONE);
+      t2 = currentTotals.get(WORD_TWO);
       LOG.info(String.format("Counters: %s:%d\t%s:%d", WORD_ONE, t1, WORD_TWO, t2));
       Assert.assertEquals((i - 1) * 10, t1);
       Assert.assertEquals((i - 1) * 5, t2);
