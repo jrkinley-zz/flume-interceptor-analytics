@@ -95,22 +95,22 @@ Much more information about the streaming topN example and the interceptors can 
     Add your authentication details for accessing the twitter streaming API:
 
     <pre>
-    AnalyticsAgent.sources.Twitter.consumerKey = <required>
-    AnalyticsAgent.sources.Twitter.consumerSecret = <required>
-    AnalyticsAgent.sources.Twitter.accessToken = <required>
-    AnalyticsAgent.sources.Twitter.accessTokenSecret = <required>
+    AnalyticsAgent.sources.Twitter.consumerKey = [required]
+    AnalyticsAgent.sources.Twitter.consumerSecret = [required]
+    AnalyticsAgent.sources.Twitter.accessToken = [required]
+    AnalyticsAgent.sources.Twitter.accessTokenSecret = [required]
     </pre>
 
     Set where you would like to store the status updates in HDFS:
 
     <pre>
-    AnalyticsAgent.sinks.TwitterHDFS.hdfs.path = hdfs://<required>:8020/user/flume/tweets/%Y/%m/%d/%H
+    AnalyticsAgent.sinks.TwitterHDFS.hdfs.path = hdfs://[required]:8020/user/flume/tweets/%Y/%m/%d/%H
     </pre>
 
     Set where you would like to store the topN results in HDFS:
 
     <pre>
-    AnalyticsAgent.sinks.TopNHDFS.hdfs.path = hdfs://<required>:8020/user/flume/topn/%Y/%m/%d/%H
+    AnalyticsAgent.sinks.TopNHDFS.hdfs.path = hdfs://[required]:8020/user/flume/topn/%Y/%m/%d/%H
     </pre>
 
 7. **Create HDFS directories**
