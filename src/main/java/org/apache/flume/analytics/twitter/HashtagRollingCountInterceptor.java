@@ -1,7 +1,6 @@
 package org.apache.flume.analytics.twitter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -40,11 +39,13 @@ public class HashtagRollingCountInterceptor extends RollingCountInterceptor<Stri
   }
 
   /** {@inheritDoc} */
+  @Override
   public void initialize() {
     InterceptorRegistry.register(HashtagRollingCountInterceptor.class, this);
   }
 
   /** {@inheritDoc} */
+  @Override
   public void close() {
     InterceptorRegistry.deregister(this);
   }
@@ -64,7 +65,7 @@ public class HashtagRollingCountInterceptor extends RollingCountInterceptor<Stri
       while (jp.nextToken() != JsonToken.END_OBJECT) {
         String fieldname = jp.getCurrentName();
         if (STATUS_UPDATE_FIELDNAME.equals(fieldname)) {
-          return jp.nextTextValue();
+          return jp.nextTextValue().toLowerCase();
         }
       }
     } catch (IOException e) {
@@ -82,7 +83,7 @@ public class HashtagRollingCountInterceptor extends RollingCountInterceptor<Stri
   /** {@inheritDoc} */
   @Override
   public List<String> getObjectsToCount(Event event) {
-    List<String> hashtags = new ArrayList<String>();
+    List<String> hashtags = Lists.newArrayList();
     String tweet = getTweetFromEvent(event);
     if (tweet != null) {
       String[] words = tweet.split(WHITESPACE);

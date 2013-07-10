@@ -78,17 +78,6 @@ public abstract class TopNInterceptor implements AnalyticInterceptor {
     }
   }
 
-  /**
-   * Computes the topN
-   */
-  private void rank() {
-    Collections.sort(rankings);
-    Collections.reverse(rankings);
-    if (rankings.size() > topN) {
-      rankings.remove(topN);
-    }
-  }
-
   /** {@inheritDoc} */
   @Override
   public Event intercept(Event event) {
@@ -114,7 +103,11 @@ public abstract class TopNInterceptor implements AnalyticInterceptor {
    * @return the topN
    */
   public List<Counter> getTopN() {
-    rank();
+    Collections.sort(rankings);
+    Collections.reverse(rankings);
+    if (rankings.size() > topN) {
+      return rankings.subList(0, topN);
+    }
     return rankings;
   }
 }

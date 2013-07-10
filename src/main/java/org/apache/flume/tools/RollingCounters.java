@@ -1,13 +1,12 @@
 package org.apache.flume.tools;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Counts objects in a sliding window.
@@ -15,7 +14,7 @@ import com.google.common.collect.Maps;
  * An objects counter is split into buckets, with each bucket representing an equal fraction of time
  * of the overall window length. An objects total count is the sum of its buckets.
  * <p>
- * Counter increments are added to the head bucket, whilst a seperate "reaper" thread advances the
+ * Counter increments are added to the head bucket, whilst a separate "reaper" thread advances the
  * window by shifting the head bucket and wiping the tail bucket every (windowLenSec / numBuckets)
  * seconds. Therefore as an objects frequency decreases, its total count also decreases over time.
  * Stale objects (those with a total count of zero) are removed from the list to free up memory.
@@ -29,7 +28,7 @@ import com.google.common.collect.Maps;
 public class RollingCounters<T> {
   private static final Logger LOG = Logger.getLogger(RollingCounters.class);
   private static final String REAPER_NAME = "Reaper";
-  private final Map<T, long[]> objCounts = new HashMap<T, long[]>();
+  private final Map<T, long[]> objCounts = Maps.newHashMap();
 
   private final int numBuckets;
   private final long millisPerBucket;
@@ -72,7 +71,7 @@ public class RollingCounters<T> {
           }
 
           synchronized (objCounts) {
-            Set<T> objToRemove = new HashSet<T>();
+            Set<T> objToRemove = Sets.newHashSet();
             for (T obj : objCounts.keySet()) {
               if (getTotalCount(obj) == 0) {
                 objToRemove.add(obj);
@@ -89,11 +88,10 @@ public class RollingCounters<T> {
                 LOG.debug("Removed stale object: " + obj);
               }
             }
+            // Advance window
+            head = tail;
+            tail = setTail();
           }
-
-          // Advance window
-          head = tail;
-          tail = setTail();
           if (LOG.isDebugEnabled()) {
             LOG.debug(String.format("Head pos set to [%d], tail pos set to [%d]", head, tail));
           }

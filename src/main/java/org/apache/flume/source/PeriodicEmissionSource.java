@@ -15,7 +15,7 @@ import org.apache.flume.tools.InterceptorRegistry;
 import org.apache.log4j.Logger;
 
 /**
- * A Flume Source that periodically connects to an {@link AnalyticInterceptor} to emit its results
+ * A Flume Source that connects to an {@link AnalyticInterceptor} and periodically emits its results
  */
 public class PeriodicEmissionSource extends AbstractSource implements EventDrivenSource,
     Configurable {

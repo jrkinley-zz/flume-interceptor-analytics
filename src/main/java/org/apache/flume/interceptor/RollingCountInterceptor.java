@@ -45,16 +45,19 @@ public abstract class RollingCountInterceptor<T> implements AnalyticInterceptor 
   }
 
   /** {@inheritDoc} */
+  @Override
   public void initialize() {
     // no-op
   }
 
   /** {@inheritDoc} */
+  @Override
   public void close() {
     // no-op
   }
 
   /** {@inheritDoc} */
+  @Override
   public Event intercept(Event event) {
     List<T> objects = getObjectsToCount(event);
     if (LOG.isDebugEnabled()) {
@@ -76,6 +79,7 @@ public abstract class RollingCountInterceptor<T> implements AnalyticInterceptor 
   }
 
   /** {@inheritDoc} */
+  @Override
   public List<Event> intercept(List<Event> events) {
     List<Event> intercepted = Lists.newArrayListWithCapacity(events.size());
     for (Event e : events) {
