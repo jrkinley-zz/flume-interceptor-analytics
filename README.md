@@ -48,45 +48,45 @@ Much more information about the streaming topN example and the interceptors can 
 
 2. **Build flume-interceptor-analytics**
 
-    <pre><code>
+    <pre>
     $ git clone https://github.com/jrkinley/flume-interceptor-analytics.git
     $ cd flume-interceptor-analytics
     $ mvn clean package
     $ ls target
     interceptor-analytics-0.0.1-SNAPSHOT.jar
-    </code></pre>
+    </pre>
 
 3. **Build or download Cloudera's custom Flume source**
 
-    <pre><code>
+    <pre>
     $ git clone https://github.com/cloudera/cdh-twitter-example.git
     $ cd cdh-twitter-example/flume-sources
     $ mvn clean package
     $ ls target
     flume-sources-1.0-SNAPSHOT.jar
-     </code></pre>
+    </pre>
 
     or
 
-    <pre><code>$ curl -O http://files.cloudera.com/samples/flume-sources-1.0-SNAPSHOT.jar</code></pre>
+    <pre>$ curl -O http://files.cloudera.com/samples/flume-sources-1.0-SNAPSHOT.jar</pre>
 
 4. **Add JARs to the Flume classpath**
 
-    <pre><code>
+    <pre>
     $ sudo cp /etc/flume-ng/conf/flume-env.sh.template /etc/flume-ng/conf/flume-env.sh
     $ vi /etc/flume-ng/conf/flume-env.sh
     FLUME_CLASSPATH=/path/to/file/interceptor-analytics-0.0.1-SNAPSHOT.jar:/path/to/file/flume-sources-1.0-SNAPSHOT.jar
-    </code></pre>
+    </pre>
 
     Edit the `flume-env.sh` file and uncomment the `FLUME_CLASSPATH` line.
     Enter the paths to `interceptor-analytics-0.0.1-SNAPSHOT.jar` and `flume-sources-1.0-SNAPSHOT.jar` separating them with a colon.
 
 5. **Set the Flume agent name to AnalyticsAgent**
 
-    <pre><code>
+    <pre>
     $ vi /etc/default/flume-ng-agent
     FLUME_AGENT_NAME=AnalyticsAgent
-    </code></pre>
+    </pre>
 
 6. **Set the Flume agent configuration**
 
@@ -94,35 +94,35 @@ Much more information about the streaming topN example and the interceptors can 
     
     Add your authentication details for accessing the twitter streaming API:
 
-    <pre><code>
+    <pre>
     AnalyticsAgent.sources.Twitter.consumerKey = <required>
     AnalyticsAgent.sources.Twitter.consumerSecret = <required>
     AnalyticsAgent.sources.Twitter.accessToken = <required>
     AnalyticsAgent.sources.Twitter.accessTokenSecret = <required>
-    </code></pre>
+    </pre>
 
     Set where you would like to store the status updates in HDFS:
 
-    <pre><code>
+    <pre>
     AnalyticsAgent.sinks.TwitterHDFS.hdfs.path = hdfs://<required>:8020/user/flume/tweets/%Y/%m/%d/%H
-    </code></pre>
+    </pre>
 
     Set where you would like to store the topN results in HDFS:
 
-    <pre><code>
+    <pre>
     AnalyticsAgent.sinks.TopNHDFS.hdfs.path = hdfs://<required>:8020/user/flume/topn/%Y/%m/%d/%H
-    </code></pre>
+    </pre>
 
 7. **Create HDFS directories**
 
-    <pre><code>
+    <pre>
     $ hadoop fs -mkdir /user/flume/tweets
     $ hadoop fs -mkdir /user/flume/topn
-    </code></pre>
+    </pre>
 
 8. **Start the Flume agent**
 
-    <pre><code>
+    <pre>
     $ sudo /etc/init.d/flume-ng-agent start
     $ tail -100f /var/log/flume-ng/flume.log
-    </code></pre>
+    </pre>
