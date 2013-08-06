@@ -18,12 +18,16 @@
 package org.apache.flume.interceptor;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.flume.Event;
+import org.apache.flume.event.EventBuilder;
 import org.apache.flume.tools.Counter;
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
 
 import com.google.common.collect.Lists;
 
@@ -35,6 +39,10 @@ import com.google.common.collect.Lists;
  */
 public abstract class TopNInterceptor implements AnalyticInterceptor {
   private static final Logger LOG = Logger.getLogger(TopNInterceptor.class);
+  private static final String TS_HEADER = "topN_TS";
+  public static final String TOP_N = "topN";
+  
+  private final JsonFactory jsonFactory = new JsonFactory();  
   private final List<Counter> rankings = Lists.newArrayList();
   private final int topN;
 
@@ -49,6 +57,41 @@ public abstract class TopNInterceptor implements AnalyticInterceptor {
    * @return List of {@link Counter} objects
    */
   public abstract List<Counter> getCounters(Event event);
+
+  /** {@inheritDoc} */
+  @Override
+  public List<Event> getStatsEvents() {
+    List<Counter> topN = getTopN();
+    StringWriter sw = new StringWriter();
+    JsonGenerator gen = null;
+
+    try {
+      gen = jsonFactory.createJsonGenerator(sw);
+      gen.writeStartObject();
+      gen.writeNumberField(TS_HEADER, System.currentTimeMillis());
+      gen.writeArrayFieldStart(TOP_N);
+      for (Counter counter : topN) {
+        gen.writeStartObject();
+        gen.writeNumberField(counter.getItem(), counter.getCount());
+        gen.writeEndObject();
+      }
+      gen.writeEndArray();
+      gen.writeEndObject();
+    } catch (IOException e) {
+      LOG.error("Error writing JSON", e);
+    } finally {
+      try {
+        gen.close();
+      } catch (IOException e) {
+        LOG.error("Unable to close JsonGenerator", e);
+      }
+    }
+
+    Event e = EventBuilder.withBody(sw.toString().getBytes());
+    e.getHeaders().put(TimestampInterceptor.Constants.TIMESTAMP,
+      Long.toString(System.currentTimeMillis()));
+    return Lists.newArrayList(e);
+  }
 
   /** {@inheritDoc} */
   @Override

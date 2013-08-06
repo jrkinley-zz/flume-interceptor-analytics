@@ -26,6 +26,7 @@ import org.apache.flume.Event;
 import org.apache.flume.analytics.twitter.HashtagTopNInterceptor;
 import org.apache.flume.event.EventBuilder;
 import org.apache.flume.interceptor.Interceptor;
+import org.apache.flume.interceptor.TopNInterceptor;
 import org.apache.flume.tools.Counter;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -52,7 +53,7 @@ public class TestHashtagTopN {
     Interceptor.Builder builder = HashtagTopNInterceptor.Builder.class.newInstance();
 
     Context ctx = new Context();
-    ctx.put(HashtagTopNInterceptor.TOP_N, "5");
+    ctx.put(TopNInterceptor.TOP_N, "5");
 
     builder.configure(ctx);
     Interceptor interceptor = builder.build();
