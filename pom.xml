@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.apache.flume</groupId>
 	<artifactId>interceptor-analytics</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 
 	<scm>
 		<connection>https://github.com/jrkinley/flume-interceptor-analytics.git</connection>
@@ -33,8 +33,7 @@
 	</repositories>
 
 	<properties>
-		<flume.version>1.3.0-cdh4.3.0</flume.version>
-		<avro.version>1.7.4</avro.version>
+		<flume.version>1.4.0-cdh4.5.0</flume.version>
 	</properties>
 
 	<dependencies>
@@ -47,12 +46,7 @@
 			<groupId>org.apache.flume</groupId>
 			<artifactId>flume-ng-core</artifactId>
 			<version>${flume.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.avro</groupId>
-			<artifactId>avro</artifactId>
-			<version>${avro.version}</version>
-		</dependency>
+		</dependency>		
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -80,5 +74,20 @@
 			<version>1.9.8</version>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<compilerVersion>1.7</compilerVersion>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>
